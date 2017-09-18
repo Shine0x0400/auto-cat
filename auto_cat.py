@@ -17,7 +17,7 @@ pay_token = 'a121208f2c7648279f122ae7d8e3f656'
 
 command_all_sharked = 6724  # paycenter_sharked_android_all
 app_meituan = 10
-version_meituan = 848
+version_meituan = 854
 network_shark_cip = 2
 network_shark_http = 3
 network_normal_http = 8
