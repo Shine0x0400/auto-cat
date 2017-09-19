@@ -16,6 +16,8 @@ pay_token = 'a121208f2c7648279f122ae7d8e3f656'
 # cat_url = 'http://cat.vip.sankuai.com/cat/r/app?query1=2017-08-18;6724;;;845;2;1;;;10;00:00;23:59&query2=2017-08-18;6724;;;845;8;1;;;10;00:00;23:59&type=request&groupByField=&sort=&op=linechartJson&token=' + pay_token
 
 command_all_sharked = 6724  # paycenter_sharked_android_all
+command_all_sharked_with_domain = 713  # paycenter_sharked_android_all_with_domain
+command_all_sharked_without_domain = 1842  # paycenter_sharked_android_all_without_domain
 app_meituan = 10
 version_meituan = 854
 network_shark_cip = 2
@@ -55,18 +57,21 @@ def request_commands_statistics(date, network_type):
     if network_type == network_shark_cip:
         network_name = "shark_cip"
         attr_name = 'shark_cip_statistics'
+        command = command_all_sharked_with_domain
     elif network_type == network_normal_http:
         network_name = "normal_http"
         attr_name = 'normal_http_statistics'
+        command = command_all_sharked_without_domain
     elif network_type == network_shark_http:
         network_name = "shark_http"
         attr_name = 'shark_http_statistics'
+        command = command_all_sharked_with_domain
     else:
         print "Wrong network type passed in: " + network_type
         return
 
     url = "http://cat.dianpingoa.com/cat/r/app?op=groupDetails&query1=%s;%d;;;%d;%d;1;;;%d;00:00;23:59&sort=request" % (
-        date, command_all_sharked, version_meituan, network_type, app_meituan)
+        date, command, version_meituan, network_type, app_meituan)
     print network_name + ' url: ' + url
     resp = requests.get(url)
     soup = BeautifulSoup(resp.text, "html.parser")
