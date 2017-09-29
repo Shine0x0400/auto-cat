@@ -1,6 +1,5 @@
 # coding=utf-8
 import datetime
-import locale
 import sys
 
 import requests
@@ -88,7 +87,7 @@ def request_commands_statistics(date, network_type):
 
         connect = ConnectionStatistics(network_name)
         connect.success_rate = str(tds[1].contents[0])
-        connect.count = locale.atoi(str(tds[2].contents[0]))
+        connect.count = int(str(tds[2].contents[0]).replace(',', ''))
         connect.time_avg = str(tds[3].contents[0])
         connect.send_pkg_avg = str(tds[4].contents[0])
         connect.recv_pkg_avg = str(tds[5].contents[0])
@@ -136,7 +135,6 @@ def generate_html(date):
 if __name__ == '__main__':
     yesterday = (datetime.datetime.now() + datetime.timedelta(days=-1)).strftime("%Y-%m-%d")
 
-    locale.setlocale(locale.LC_NUMERIC, 'en_US.UTF-8')
     request_commands_statistics(yesterday, network_shark_cip)
     request_commands_statistics(yesterday, network_normal_http)
 
