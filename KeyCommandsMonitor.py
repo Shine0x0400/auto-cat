@@ -15,10 +15,14 @@ from pyh import *
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
-cat_url = 'http://cat.dianpingoa.com/cat/r/app?op=dailyApiLine&query1=%s;%d;;;;;;;;;%s;00:00;00:00&query2=&type=%s&groupByField=platform&sort='
+# http://cat.dianpingoa.com/cat/r/app?op=dailyApiLine&query1=2017-10-08;7110;;;;;1;;;;2017-10-08;00:00;00:00&query2=2017-10-08;7128;;;;;2;;;;2017-10-08;00:00;00:00&type=success&groupByField=&sort=
+cat_url = 'http://cat.dianpingoa.com/cat/r/app?op=dailyApiLine&query1=%s;%d;;;;;1;;;;%s;00:00;00:00&query2=%s;%d;;;;;2;;;;%s;00:00;00:00&type=%s&groupByField=platform&sort='
 
-command_dict = {'/hellopay/dispatcher': 7108, '/cashier/dispatcher': 548, '/cashier/gohellopay': 7109,
-                '/cashier/directpay': 7107, '/hellopay/bindpay': 7110, '/conch/wallet/walletmain': 7111}
+command_dict_android = {'/hellopay/dispatcher': 7108, '/cashier/dispatcher': 548, '/cashier/gohellopay': 7109,
+                        '/cashier/directpay': 7107, '/hellopay/bindpay': 7110, '/conch/wallet/walletmain': 7111}
+
+command_dict_ios = {'/hellopay/dispatcher': 5652, '/cashier/dispatcher': 4848, '/cashier/gohellopay': 7129,
+                    '/cashier/directpay': 1478, '/hellopay/bindpay': 7128, '/conch/wallet/walletmain': 5631}
 
 cat_platform_ios = 'ios'
 cat_platform_android = 'android'
@@ -63,65 +67,58 @@ def parse_args():
 def crawling_and_save(cmd):
     """crawling from CAT web page and save in out dict"""
 
-    cmd_id = command_dict.get(cmd)
     if statistics_dict.has_key(cmd):
         command = statistics_dict.get(cmd)
     else:
         command = CommandStatistics(cmd)
         statistics_dict[cmd] = command
 
-    crawling_net_rate(cmd_id, command)
-    crawling_biz_rate(cmd_id, command)
+    cmd_id_a = command_dict_android.get(cmd)
+    cmd_id_i = command_dict_ios.get(cmd)
+
+    rate_url = cat_url % (start, cmd_id_a, end, start, cmd_id_i, end, 'success')
+    crawling_net_rate(rate_url, command)
+    biz_url = cat_url % (start, cmd_id_a, end, start, cmd_id_i, end, 'businessSuccess')
+    crawling_biz_rate(biz_url, command)
 
 
-def crawling_net_rate(cmd_id, command_stats):
+def crawling_net_rate(url, command_stats):
     """crawling network success rate and other statistics"""
-    rate_url = cat_url % (start, cmd_id, end, 'success')
-    resp = requests.get(rate_url)
+    resp = requests.get(url)
     soup = BeautifulSoup(resp.text, "html.parser")
-    trs = soup.find_all(id='comparison_content')[0].find_all('tbody')[0].find_all('tr')
-    for tr in trs:
-        tds = tr.find_all('td')
-        if tds[3].get_text() == cat_platform_ios:
-            platform = command_stats.ios
-            platform.net_rate = tds[7].get_text()
-            platform.count = int(str(tds[8].get_text()).replace(',', ''))
-            platform.time_avg = tds[9].get_text()
-            platform.send_pkg_avg = tds[10].get_text()
-            platform.recv_pkg_avg = tds[11].get_text()
-        elif tds[3].get_text() == cat_platform_android:
-            platform = command_stats.android
-            platform.net_rate = tds[7].get_text()
-            platform.count = int(str(tds[8].get_text()).replace(',', ''))
-            platform.time_avg = tds[9].get_text()
-            platform.send_pkg_avg = tds[10].get_text()
-            platform.recv_pkg_avg = tds[11].get_text()
-    total_tds = soup.find_all(id='web_content')[0].find_all('tbody')[0].find_all('tr')[0].find_all('td')
-    platform = command_stats.all_platform
-    platform.net_rate = total_tds[1].get_text()
-    platform.count = int(str(total_tds[2].get_text()).replace(',', ''))
-    platform.time_avg = total_tds[3].get_text()
-    platform.send_pkg_avg = total_tds[4].get_text()
-    platform.recv_pkg_avg = total_tds[5].get_text()
+    trs = soup.find_all(id='web_content')[0].find_all('tbody')[0].find_all('tr')
+
+    # save android stats
+    tds = trs[0].find_all('td')
+    platform = command_stats.android
+    platform.net_rate = tds[1].get_text()
+    platform.count = int(str(tds[2].get_text()).replace(',', ''))
+    platform.time_avg = tds[3].get_text()
+    platform.send_pkg_avg = tds[4].get_text()
+    platform.recv_pkg_avg = tds[5].get_text()
+    # save ios stats
+    tds = trs[1].find_all('td')
+    platform = command_stats.ios
+    platform.net_rate = tds[1].get_text()
+    platform.count = int(str(tds[2].get_text()).replace(',', ''))
+    platform.time_avg = tds[3].get_text()
+    platform.send_pkg_avg = tds[4].get_text()
+    platform.recv_pkg_avg = tds[5].get_text()
 
 
-def crawling_biz_rate(cmd_id, command_stats):
+def crawling_biz_rate(url, command_stats):
     """crawling business success rate"""
-    rate_url = cat_url % (start, cmd_id, end, 'businessSuccess')
-    resp = requests.get(rate_url)
+    resp = requests.get(url)
     soup = BeautifulSoup(resp.text, "html.parser")
-    trs = soup.find_all(id='comparison_content')[0].find_all('tbody')[0].find_all('tr')
-    for tr in trs:
-        tds = tr.find_all('td')
-        if tds[3].get_text() == cat_platform_ios:
-            platform = command_stats.ios
-            platform.biz_rate = tds[7].get_text()
-        elif tds[3].get_text() == cat_platform_android:
-            platform = command_stats.android
-            platform.biz_rate = tds[7].get_text()
-    total_tds = soup.find_all(id='web_content')[0].find_all('tbody')[0].find_all('tr')[0].find_all('td')
-    platform = command_stats.all_platform
-    platform.biz_rate = total_tds[1].get_text()
+    trs = soup.find_all(id='web_content')[0].find_all('tbody')[0].find_all('tr')
+    # save android stats
+    tds = trs[0].find_all('td')
+    platform = command_stats.android
+    platform.biz_rate = tds[1].get_text()
+    # save ios stats
+    tds = trs[1].find_all('td')
+    platform = command_stats.ios
+    platform.biz_rate = tds[1].get_text()
 
 
 def generate_html(kind, start, end):
@@ -135,27 +132,20 @@ def generate_html(kind, start, end):
     tr1 << th('命令字') + th('平台') + th('请求数') + th('平均时间(ms)') + th('网络成功率') + th('业务成功率') + th('平均发包(B)') + th('平均回包(B)')
     for idx, c in enumerate(sorted_commands):
         colored = ((idx % 2) != 0)
-        if c.android.count > 0:
-            conn = c.android
-            tr2 = mytab << tr()
-            if colored:
-                tr2.attributes['bgcolor'] = 'lightyellow'
-            tr2 << td('') + td(conn.platform) + td(conn.count) + td(conn.time_avg) + td(conn.net_rate) + td(
-                conn.biz_rate) + td(conn.send_pkg_avg) + td(conn.recv_pkg_avg)
-        if c.ios.count > 0:
-            conn = c.ios
-            tr2 = mytab << tr()
-            if colored:
-                tr2.attributes['bgcolor'] = 'lightyellow'
-            tr2 << td('') + td(conn.platform) + td(conn.count) + td(conn.time_avg) + td(conn.net_rate) + td(
-                conn.biz_rate) + td(conn.send_pkg_avg) + td(conn.recv_pkg_avg)
-        if c.all_platform.count > 0:
-            conn = c.all_platform
-            tr2 = mytab << tr()
-            if colored:
-                tr2.attributes['bgcolor'] = 'lightyellow'
-            tr2 << td(c.command) + td(conn.platform) + td(conn.count) + td(conn.time_avg) + td(conn.net_rate) + td(
-                conn.biz_rate) + td(conn.send_pkg_avg) + td(conn.recv_pkg_avg)
+
+        conn = c.android
+        tr2 = mytab << tr()
+        if colored:
+            tr2.attributes['bgcolor'] = 'lightyellow'
+        tr2 << td(c.command) + td(conn.platform) + td(format(conn.count, ',')) + td(conn.time_avg) + td(
+            conn.net_rate) + td(conn.biz_rate) + td(conn.send_pkg_avg) + td(conn.recv_pkg_avg)
+
+        conn = c.ios
+        tr2 = mytab << tr()
+        if colored:
+            tr2.attributes['bgcolor'] = 'lightyellow'
+        tr2 << td('') + td(conn.platform) + td(format(conn.count, ',')) + td(conn.time_avg) + td(conn.net_rate) + td(
+            conn.biz_rate) + td(conn.send_pkg_avg) + td(conn.recv_pkg_avg)
 
     page.printOut(date + '_PayCat.html', ec='UTF-8')
 
@@ -172,11 +162,11 @@ if __name__ == '__main__':
         raise Exception("Invalid kind", kind)
     print 'kind=%s\tstart=%s, end=%s' % (kind, start, end)
 
-    for key in command_dict.keys():
+    for key in command_dict_android.keys():
         crawling_and_save(key)
 
     # sort by request count
-    sorted_commands = sorted(statistics_dict.itervalues(), key=lambda x: x.all_platform.count, reverse=True)
+    sorted_commands = sorted(statistics_dict.itervalues(), key=lambda x: x.ios.count + x.android.count, reverse=True)
 
     generate_html(kind, start, end)
 
