@@ -19,10 +19,12 @@ sys.setdefaultencoding('utf-8')
 cat_url = 'http://cat.dianpingoa.com/cat/r/app?op=dailyApiLine&query1=%s;%d;;;;;1;;;;%s;00:00;00:00&query2=%s;%d;;;;;2;;;;%s;00:00;00:00&type=%s&groupByField=platform&sort='
 
 command_dict_android = {'/hellopay/dispatcher': 7108, '/cashier/dispatcher': 548, '/cashier/gohellopay': 7109,
-                        '/cashier/directpay': 7107, '/hellopay/bindpay': 7110, '/conch/wallet/walletmain': 7111}
+                        '/cashier/directpay': 7107, '/hellopay/bindpay': 7110, '/conch/wallet/walletmain': 7111,
+                        'all_requests': 1513}
 
 command_dict_ios = {'/hellopay/dispatcher': 5652, '/cashier/dispatcher': 4848, '/cashier/gohellopay': 7129,
-                    '/cashier/directpay': 1478, '/hellopay/bindpay': 7128, '/conch/wallet/walletmain': 5631}
+                    '/cashier/directpay': 1478, '/hellopay/bindpay': 7128, '/conch/wallet/walletmain': 5631,
+                    'all_requests': 7112}
 
 cat_platform_ios = 'ios'
 cat_platform_android = 'android'
@@ -134,17 +136,19 @@ def generate_html(kind, start, end):
         colored = ((idx % 2) != 0)
 
         conn = c.android
-        tr2 = mytab << tr()
+        tr2 = mytab << tr(align='right')
         if colored:
             tr2.attributes['bgcolor'] = 'lightyellow'
-        tr2 << td(c.command) + td(conn.platform) + td(format(conn.count, ',')) + td(conn.time_avg) + td(
+        tr2 << td(c.command, align='left') + td(conn.platform) + td(format(conn.count, ',')) + td(
+            conn.time_avg) + td(
             conn.net_rate) + td(conn.biz_rate) + td(conn.send_pkg_avg) + td(conn.recv_pkg_avg)
 
         conn = c.ios
-        tr2 = mytab << tr()
+        tr2 = mytab << tr(align='right')
         if colored:
             tr2.attributes['bgcolor'] = 'lightyellow'
-        tr2 << td('') + td(conn.platform) + td(format(conn.count, ',')) + td(conn.time_avg) + td(conn.net_rate) + td(
+        tr2 << td('', align='left') + td(conn.platform) + td(format(conn.count, ',')) + td(conn.time_avg) + td(
+            conn.net_rate) + td(
             conn.biz_rate) + td(conn.send_pkg_avg) + td(conn.recv_pkg_avg)
 
     page.printOut(date + '_PayCat.html', ec='UTF-8')
@@ -165,8 +169,10 @@ if __name__ == '__main__':
     for key in command_dict_android.keys():
         crawling_and_save(key)
 
-    # sort by request count
-    sorted_commands = sorted(statistics_dict.itervalues(), key=lambda x: x.ios.count + x.android.count, reverse=True)
+    # sort by request count, put all_requests at last index
+    sorted_commands = sorted(statistics_dict.itervalues(),
+                             key=lambda x: x.ios.count + x.android.count if x.command != 'all_requests' else -9999,
+                             reverse=True)
 
     generate_html(kind, start, end)
 
