@@ -80,8 +80,8 @@ def crawling_and_save(cmd):
 
     rate_url = cat_url % (start, cmd_id_a, end, start, cmd_id_i, end, 'success')
     crawling_net_rate(rate_url, command)
-    biz_url = cat_url % (start, cmd_id_a, end, start, cmd_id_i, end, 'businessSuccess')
-    crawling_biz_rate(biz_url, command)
+    # biz_url = cat_url % (start, cmd_id_a, end, start, cmd_id_i, end, 'businessSuccess')
+    # crawling_biz_rate(biz_url, command)
 
 
 def crawling_net_rate(url, command_stats):
@@ -94,18 +94,20 @@ def crawling_net_rate(url, command_stats):
     tds = trs[0].find_all('td')
     platform = command_stats.android
     platform.net_rate = tds[1].get_text()
-    platform.count = int(str(tds[2].get_text()).replace(',', ''))
-    platform.time_avg = tds[3].get_text()
-    platform.send_pkg_avg = tds[4].get_text()
-    platform.recv_pkg_avg = tds[5].get_text()
+    platform.biz_rate = tds[2].get_text()
+    platform.count = int(str(tds[3].get_text()).replace(',', ''))
+    platform.time_avg = tds[4].get_text()
+    platform.send_pkg_avg = tds[5].get_text()
+    platform.recv_pkg_avg = tds[6].get_text()
     # save ios stats
     tds = trs[1].find_all('td')
     platform = command_stats.ios
     platform.net_rate = tds[1].get_text()
-    platform.count = int(str(tds[2].get_text()).replace(',', ''))
-    platform.time_avg = tds[3].get_text()
-    platform.send_pkg_avg = tds[4].get_text()
-    platform.recv_pkg_avg = tds[5].get_text()
+    platform.biz_rate = tds[2].get_text()
+    platform.count = int(str(tds[3].get_text()).replace(',', ''))
+    platform.time_avg = tds[4].get_text()
+    platform.send_pkg_avg = tds[5].get_text()
+    platform.recv_pkg_avg = tds[6].get_text()
 
 
 def crawling_biz_rate(url, command_stats):
@@ -116,11 +118,11 @@ def crawling_biz_rate(url, command_stats):
     # save android stats
     tds = trs[0].find_all('td')
     platform = command_stats.android
-    platform.biz_rate = tds[1].get_text()
+    platform.biz_rate = tds[2].get_text()
     # save ios stats
     tds = trs[1].find_all('td')
     platform = command_stats.ios
-    platform.biz_rate = tds[1].get_text()
+    platform.biz_rate = tds[2].get_text()
 
 
 def generate_html(kind, start, end):

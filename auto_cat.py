@@ -18,7 +18,7 @@ command_all_sharked = 6724  # paycenter_sharked_android_all
 command_all_sharked_with_domain = 713  # paycenter_sharked_android_all_with_domain
 command_all_sharked_without_domain = 1842  # paycenter_sharked_android_all_without_domain
 app_meituan = 10
-version_meituan = 854
+version_meituan = 862
 network_shark_cip = 2
 network_shark_http = 3
 network_normal_http = 8
@@ -87,10 +87,10 @@ def request_commands_statistics(date, network_type):
 
         connect = ConnectionStatistics(network_name)
         connect.success_rate = str(tds[1].contents[0])
-        connect.count = int(str(tds[2].contents[0]).replace(',', ''))
-        connect.time_avg = str(tds[3].contents[0])
-        connect.send_pkg_avg = str(tds[4].contents[0])
-        connect.recv_pkg_avg = str(tds[5].contents[0])
+        connect.count = int(str(tds[3].contents[0]).replace(',', ''))
+        connect.time_avg = str(tds[4].contents[0])
+        connect.send_pkg_avg = str(tds[5].contents[0])
+        connect.recv_pkg_avg = str(tds[6].contents[0])
 
         setattr(command, attr_name, connect)
 
